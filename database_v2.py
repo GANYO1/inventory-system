@@ -79,6 +79,25 @@ class Database:
         cursor.execute("SELECT SUM(price * quantity) FROM products")
         result = cursor.fetchone()[0]
         return result if result else 0.0
+    
+    def get_all_products(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM products")
+        rows = cursor.fetchall()
+        return [
+            {"id": r[0], "name": r[1], "price": r[2], 
+            "quantity": r[3], "supplier_id": r[4]}
+            for r in rows
+        ]
+
+    def find_product(self, product_id):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return {"id": row[0], "name": row[1], "price": row[2],
+                "quantity": row[3], "supplier_id": row[4]}
 
 
 if __name__ == "__main__":
