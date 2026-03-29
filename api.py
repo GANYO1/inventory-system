@@ -1,7 +1,9 @@
-from sqlite3 import IntegrityError
+# from sqlite3 import IntegrityError
+from psycopg2 import errors as pg_errors
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from database_v2 import Database
+from database_pg import Database
+# from database_v2 import Database
 
 app = FastAPI()
 
@@ -76,10 +78,11 @@ def add_product(product: ProductCreate):
         )
         db.conn.commit()
         return {"message": result}
-    except IntegrityError:
+    except pg_errors.UniqueViolation:
         raise HTTPException(
-            status_code=409,
-            detail=f"Product ID {product.id} already exists"
-        )
+        status_code=409,
+        detail=f"Product ID {product.id} already exists"
+    )
     finally:
         db.disconnect()
+
