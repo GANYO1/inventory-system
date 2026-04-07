@@ -8,11 +8,7 @@ load_dotenv()
 class Database:
     def __init__(self):
         self.conn = None
-
-    def connect(self):
-        self.conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-        return self
-
+        
     def disconnect(self):
         if self.conn:
             self.conn.commit()
@@ -21,8 +17,8 @@ class Database:
 
     def connect(self):
         self.conn = psycopg2.connect(
-        os.getenv("DATABASE_URL"),
-        sslmode="require"
+            os.getenv("DATABASE_URL"),
+            sslmode="require"
     )
         return self
 
@@ -117,7 +113,42 @@ class Database:
             LEFT JOIN suppliers ON products.supplier_id = suppliers.id
         """)
         return cursor.fetchall()
+    
 
+    def create_users_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                hashed_password TEXT NOT NULL
+            )
+        """)
+        self.conn.commit()
+        return "Users table ready"
+    
+
+    def create_user(self, username, hashed_password):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT INTO users (username, hashed_password) VALUES (%s, %s)",
+            (username, hashed_password)
+        )
+        self.conn.commit()
+        return f"User {username} created"
+    
+
+    def get_user(self, username):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM users WHERE username = %s",
+            (username,)
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return {"id": row[0], "username": row[1], "hashed_password": row[2]}   
+    
 
 if __name__ == "__main__":
     db = Database()
@@ -125,6 +156,7 @@ if __name__ == "__main__":
 
     print(db.create_suppliers_table())
     print(db.create_products_table())
+    print(db.create_users_table())
 
     print(db.add_supplier(1, "TechSource Ghana", "0244000001"))
     print(db.add_supplier(2, "Accra Electronics", "0244000002"))
