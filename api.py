@@ -28,6 +28,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 # Everything is registered on this object using decorators
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 def get_db():
     # Create a fresh database connection for each request
